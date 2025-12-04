@@ -42,11 +42,15 @@ const App: React.FC = () => {
     const unsubscribe = useAuth((u) => setUser(u));
     
     // Load local storage data
-    const savedDownloads = localStorage.getItem('soundwave_downloads');
-    if (savedDownloads) setDownloads(JSON.parse(savedDownloads));
+    try {
+      const savedDownloads = localStorage.getItem('soundwave_downloads');
+      if (savedDownloads) setDownloads(JSON.parse(savedDownloads));
 
-    const savedTheme = localStorage.getItem('soundwave_theme') as Theme;
-    if (savedTheme) updateTheme(savedTheme);
+      const savedTheme = localStorage.getItem('soundwave_theme') as Theme;
+      if (savedTheme) updateTheme(savedTheme);
+    } catch (e) {
+      console.error("Local storage access denied", e);
+    }
 
     return () => unsubscribe();
   }, []);
@@ -84,7 +88,22 @@ const App: React.FC = () => {
     setToasts(prev => [...prev, { id, message, type }]);
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
-    }, 3000);
+    }, 5000);
+  };
+
+  const handleLogin = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (error: any) {
+      console.error("Login error detail:", error);
+      if (error.code === 'auth/unauthorized-domain') {
+        addToast('Domain not allowed. Add to Firebase Console > Auth > Settings', 'error');
+      } else if (error.code === 'auth/popup-closed-by-user') {
+        addToast('Sign in cancelled', 'info');
+      } else {
+        addToast('Sign in failed. Check console for details.', 'error');
+      }
+    }
   };
 
   const updateTheme = (newTheme: Theme) => {
@@ -140,8 +159,12 @@ const App: React.FC = () => {
     if (!exists) {
       const newDownloads = [...downloads, { ...track, isOffline: true }];
       setDownloads(newDownloads);
-      localStorage.setItem('soundwave_downloads', JSON.stringify(newDownloads));
-      addToast('Downloaded to library', 'success');
+      try {
+        localStorage.setItem('soundwave_downloads', JSON.stringify(newDownloads));
+        addToast('Downloaded to library', 'success');
+      } catch (e) {
+        addToast('Storage full. Could not download.', 'error');
+      }
     } else {
       addToast('Already downloaded', 'info');
     }
@@ -224,7 +247,7 @@ const App: React.FC = () => {
             {!user ? (
               <div className="flex items-center gap-4">
                 <button className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-bold text-sm tracking-widest uppercase hover:scale-105 transition-transform">Sign up</button>
-                <button onClick={signInWithGoogle} className="bg-[var(--text-primary)] text-[var(--bg-primary)] font-bold py-2 px-6 rounded-full text-sm hover:scale-105 transition-transform">Log in</button>
+                <button onClick={handleLogin} className="bg-[var(--text-primary)] text-[var(--bg-primary)] font-bold py-2 px-6 rounded-full text-sm hover:scale-105 transition-transform">Log in</button>
               </div>
             ) : (
               <div className="flex items-center gap-4 cursor-pointer group relative">
@@ -295,9 +318,11 @@ const App: React.FC = () => {
           <div className="mt-12 mb-8 text-center text-[var(--text-secondary)] text-sm pb-10">
             <p>You've reached the end of the list.</p>
             <div className="mt-4 flex justify-center gap-4 text-2xl">
-              <i className="fa-brands fa-instagram hover:text-[var(--text-primary)] cursor-pointer"></i>
-              <i className="fa-brands fa-twitter hover:text-[var(--text-primary)] cursor-pointer"></i>
-              <i className="fa-brands fa-facebook hover:text-[var(--text-primary)] cursor-pointer"></i>
+              <i className="fa-brands fa-instagram hover:text-[var(--text-primary)] cursor-pointer hover:scale-110 transition-transform"></i>
+              <i className="fa-brands fa-twitter hover:text-[var(--text-primary)] cursor-pointer hover:scale-110 transition-transform"></i>
+              <a href="https://www.facebook.com/profile.php?id=61583456361691" target="_blank" rel="noopener noreferrer">
+                <i className="fa-brands fa-facebook hover:text-blue-500 cursor-pointer hover:scale-110 transition-transform"></i>
+              </a>
             </div>
           </div>
         </div>
@@ -311,9 +336,9 @@ const App: React.FC = () => {
       <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] flex flex-col gap-2 pointer-events-none">
         {toasts.map(toast => (
           <div key={toast.id} className={`pointer-events-auto px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-fade-in ${
-            toast.type === 'success' ? 'bg-green-600 text-white' : 'bg-zinc-800 text-white border border-zinc-700'
+            toast.type === 'success' ? 'bg-green-600 text-white' : (toast.type === 'error' ? 'bg-red-600 text-white' : 'bg-zinc-800 text-white border border-zinc-700')
           }`}>
-             <i className={`fa-solid ${toast.type === 'success' ? 'fa-check' : 'fa-info-circle'}`}></i>
+             <i className={`fa-solid ${toast.type === 'success' ? 'fa-check' : (toast.type === 'error' ? 'fa-triangle-exclamation' : 'fa-info-circle')}`}></i>
              <span className="font-medium text-sm">{toast.message}</span>
           </div>
         ))}

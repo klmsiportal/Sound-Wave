@@ -59,7 +59,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView, onO
 
       <div className="px-6 py-4 border-t border-zinc-800">
         <div className="text-xs text-zinc-500 hover:underline cursor-pointer">Cookies</div>
-        <div className="text-xs text-zinc-500 hover:underline cursor-pointer mt-1">Privacy</div>
+        <div className="text-xs text-zinc-500 hover:underline cursor-pointer mt-1 mb-4">Privacy</div>
+        
+        <div className="pt-4 border-t border-zinc-800">
+          <div className="text-xs text-zinc-600 mb-1">Created by</div>
+          <a 
+            href="https://www.facebook.com/profile.php?id=61583456361691" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-sm font-bold text-zinc-400 hover:text-white transition-colors flex items-center gap-2"
+          >
+            Akin S. Sokpah 
+            <i className="fa-brands fa-facebook text-blue-600"></i>
+          </a>
+        </div>
       </div>
     </div>
   );
