@@ -1,0 +1,7 @@
+{
+  "name": "SoundWave",
+  "description": "A feature-rich music streaming platform with offline playback, artist radio, and social sharing.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
